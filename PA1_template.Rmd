@@ -51,7 +51,14 @@ display the median variations in a bar plot
     barplot(data_mean$median_steps , names.arg = data_mean$date , xlab = "day" , ylab = "mean number of steps" , main = "median number of steps per day "  )
 ```
 
-
+report the mean : 
+```{r}
+ mean(data_mean$nbr_steps , na.rm = TRUE)
+``` 
+report the median : 
+```{r}
+ median(data_mean$nbr_steps , na.rm = TRUE)
+``` 
 ## the average daily activity pattern :
 first thing we group the data by the 5-minutes interval 
 ```{r}
@@ -97,12 +104,11 @@ we group the imputed data by day
 
 report the mean and median total number of steps taken per day
 ```{r}
-  par(mfrow = c(2, 1))
-  barplot(imputed_day_grp$mean_steps , names.arg = imputed_day_grp$date , xlab = "day" , ylab = "mean number of steps" , main = "mean number of steps per day "  )
-  barplot(imputed_day_grp$median_steps , names.arg = imputed_day_grp$date , xlab = "day" , ylab = "mean number of steps" , main = "median number of steps per day "  )
+  mean(imputed_day_grp$sum_steps)
+  median(imputed_day_grp$sum_steps)
+  
 ```
-using the pmm methode to umpute the missing data has changed some values of the data but it doesn't affect the overall shape of the data
-
+using the pmm method to impute the missing data has changed the vaue of the mean and median 
 
 ## the differences in activity patterns between weekdays and weekends 
 
