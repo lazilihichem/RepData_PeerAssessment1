@@ -1,0 +1,122 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+author: "Hic"
+date: "15/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading and preprocessing the data
+```{r}
+  data <- read.csv("activity.csv")
+  data$date = as.Date(data$date)
+  head(data)
+```
+
+
+## calculate the mean total number of steps taken per day
+
+we group the data per day
+
+```{r pressure, echo=FALSE}
+    #library(dplyr)
+    data_grp <- group_by(data , date)
+    data_mean <- summarize(data_grp , mean_steps = mean(steps , na.rm = TRUE) , median_steps = median(steps , na.rm = TRUE) )
+
+```
+
+display the data as a table : 
+```{r}
+  data_mean
+```
+display the mean variations in a bar plot :
+```{r}
+    barplot(data_mean$mean_steps , names.arg = data_mean$date , xlab = "day" , ylab = "mean number of steps" , main = "mean number of steps per day "  )
+```
+display the median variations in a bar plot
+
+```{r}
+    barplot(data_mean$median_steps , names.arg = data_mean$date , xlab = "day" , ylab = "mean number of steps" , main = "median number of steps per day "  )
+```
+
+
+## the average daily activity pattern :
+first thing we group the data by the 5-minutes interval 
+```{r}
+ data_5m_grp <- group_by(data , interval)
+ data_5m_mean <- summarize(data_5m_grp , mean_steps_per_interv = mean(steps , na.rm = TRUE))
+ data_5m_mean
+```
+plot the time serie of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+we devide the interval number by 5 to better visualize the plot
+```{r}
+  plot(x = data_5m_mean$interval / 5 , y = data_5m_mean$mean_steps_per_interv , xlab = "interval" , ylab = "mean number of steps" , main = "mean number of steps per day " , type = "l" )
+```
+```{r}
+  subset(data_5m_mean, mean_steps_per_interv == max(mean_steps_per_interv , na.rm = TRUE))
+```
+the maximum value is at 8h35
+
+## imputing missing values 
+```{r}
+  nrow(subset(data , is.na(steps)))
+```
+the number of missing values in the dataset is 2304
+
+now lets impute the missing values using the "pmm" method implemented by the mice library 
+```{r}
+    library(mice)
+    imputed_Data <- mice(data,m=5,maxit=3,meth='pmm',seed=500)
+    imputed_Data <- complete(imputed_Data)
+    nrow(subset(imputed_Data , is.na(steps)))
+```
+as you can see the number of missing values now is zero
+
+we group the imputed data by day
+```{r}
+  imputed_grp <- group_by(imputed_Data , date)
+  imputed_day_grp <- summarise(imputed_grp , sum_steps = sum(steps) , mean_steps = mean(steps) , median_steps = median(steps) )
+  hist(imputed_day_grp$sum_steps , breaks = 61 , main = "istogramme of the number of steps" , xlab = "number of steps")
+```
+
+
+
+
+
+report the mean and median total number of steps taken per day
+```{r}
+  par(mfrow = c(2, 1))
+  barplot(imputed_day_grp$mean_steps , names.arg = imputed_day_grp$date , xlab = "day" , ylab = "mean number of steps" , main = "mean number of steps per day "  )
+  barplot(imputed_day_grp$median_steps , names.arg = imputed_day_grp$date , xlab = "day" , ylab = "mean number of steps" , main = "median number of steps per day "  )
+```
+using the pmm methode to umpute the missing data has changed some values of the data but it doesn't affect the overall shape of the data
+
+
+## the differences in activity patterns between weekdays and weekends 
+
+first we create a factor variable indicating if the day is a weekend or a weekday then we group the number of steps per interval and we calcuate the mean 
+```{r echo= FALSE}
+  data$week <- as.factor(ifelse(weekdays(data$date) %in% c("samedi" , "dimanche") , "weekend" , "weekday"))
+  head(data)
+  grp_data <- group_by(data , week , interval)
+  mean_data <- summarise(grp_data , mean_steps = mean(steps , na.rm = TRUE))
+  mean_data_weekday <- subset(mean_data , week == "weekday")
+  mean_data_weekend <- subset(mean_data , week == "weekend")
+```
+after this we plot the results 
+```{r}
+par(mfrow = c(2, 1))
+  plot(y = mean_data_weekend$mean_steps , x =  mean_data_weekend$interval , xlab = "day" , ylab = "mean number of steps" , main = "mean number of steps per interval in weekend " , type = "l" , col = "red"  )
+  plot(y = mean_data_weekday$mean_steps , x = mean_data_weekend$interval , xlab = "day" , ylab = "mean number of steps" , main = "mean number of steps per interval in weekday " ,type = "l" , col ="blue" )
+
+```
+
+
+
+
+
+
+
